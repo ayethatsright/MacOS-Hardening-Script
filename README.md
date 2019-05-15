@@ -11,4 +11,4 @@ To run the script:
 
 Copy it to the Mac, open a terminal, go to the directory where the file is stored and run:
 
-sudo bash hardening_script.sh
+'sudo bash hardening_script.sh'
