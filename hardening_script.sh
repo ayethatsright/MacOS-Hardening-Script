@@ -333,6 +333,6 @@ sleep 2
 #THIS SECTION REBOOTS THE MACHINE SO THE SETTINGS CAN TAKE EFFECT - IT ADDS A KEYPRESS AS A PAUSE BEFORE CONTINUING WITH THE REBOOT
 read -r -p "[I] The machine will now reboot to enable the hardening to take effect. Press ENTER to continue..."
 
-#sudo reboot
+sudo reboot
 
 done
