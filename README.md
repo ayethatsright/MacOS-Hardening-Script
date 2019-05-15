@@ -44,6 +44,38 @@ The script currently applies the following hardening/applies the following setti
 20. Prevents other applications from intercepting text typed in to the terminal
 21. Prevents downloaded signed software from receiving incoming connections
 22. Enables packetfilter (pf)
-23. Configures firewall to block incoming apple file server packets
-24. Configures firewall to block incoming Bonjour packets
-
+23. Configures firewall to block apple file server packets
+24. Configures firewall to block Bonjour packets
+25. Configures firewall to block finger
+26. Configures firewall to block FTP 
+27. Configures firewall to block HTTP
+28. Configures firewall to block ICMP
+29. Configures firewall to block IMAP
+30. Configures firewall to block IMAPS
+31. Configures firewall to block iTunes Sharing 
+32. Configures firewall to block mDNSResponder
+33. Configures firewall to block NFS
+34. Configures firewall to block Optical Sharing
+35. Configures firewall to block POP3
+36. Configures firewall to block POP3S
+37. Configures firewall to block Printer Sharing
+38. Configures firewall to block Remote Apple Events
+39. Configures firewall to block Screen Sharing
+40. Configures firewall to block SMB
+41. Configures firewall to block SMTP
+42. Configures firewall to block SSH
+43. Configures firewall to block Telnet
+44. Configures firewall to block TFTP
+45. Configures firewall to block UUCP
+46. Prevents any action when a blank CD is inserted
+47. Prevents any action when a blank DVD is inserted
+48. Prevents any action when a music CD is inserted
+49. Prevents any action when a picture CD is inserted
+50. Prevents any action when a video DVD is inserted
+51. Disables the SMB file sharing daemon
+52. Prevents the computer from broadcasting bonjour service advertisements
+53. Disables the NFS server daemon
+54. Disables the public key authentication mechanism for SSH
+55. Prevents root login via SSH
+56. Sets the number of 'client alive messages' (that can be sent before disconnecting the client) to 4
+57. Reboots to ensure the settings take effect
