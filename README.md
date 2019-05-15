@@ -12,3 +12,8 @@ It's been wrote so each hardening control is included as a separate item to make
 Copy it to the Mac, open a terminal, go to the directory where the file is stored and run:
 
 `sudo bash hardening_script.sh`
+
+Whilst the script is running you will be asked to provide the following information:
+* A hostname for the machine
+* A firmware (BIOS) password
+* The username of the local user account
