@@ -66,15 +66,6 @@ echo "[I] Setting the firmware password"
 firmwarepasswd -setpasswd
 sleep 1
 
-#THIS SECTION CHOWNS THE LOCAL USERS DIRECTORY
-CONFIRM="n"
-while [ "$CONFIRM" != "y" ] ; do
-	echo "[I] We need to change file owner (CHOWN) of the user's home directory to ensure all files are permissioned correctly.  What is the username of the local user account created previously? "
-	read -p "Local user's username: " LOCALUSERNAME
-	echo "[?] Is the local user's username correct?"
-	echo " Local user's username: $LOCALUSERNAME"
-	read -p "[y/n]: " CONFIRM
-
 #THIS SECTION CONFIRMS IF THE SYSTEM INTEGRITY PROTECTION IS ENABLED
 csrutil status
 sleep 2
@@ -97,7 +88,7 @@ sleep 2
 
 #THIS SECTION ADDS THE LOGON BANNER
 echo "[I] Adding the logon banner"
-printf '%s\n' 'EUI Limited' 'Unauthorised use of this system is an offence under the Computer Misuse Act 1990.' 'Unless authorised by AGL Management do not proceed. You must not abuse your' 'own system access or use the system under another User ID.' > /Library/Security/PolicyBanner.txt
+printf '%s\n' '[REPLACE THIS WITH THE NAME OF YOUR COMPANY i.e. Gihub Plc]' 'Unauthorised use of this system is an offence under the Computer Misuse Act 1990.' 'Unless authorised by [YOUR COMPANY] do not proceed. You must not abuse your' 'own system access or use the system under another User ID.' > /Library/Security/PolicyBanner.txt
 sleep 2
 
 #THIS SECTION DISABLES CONSOLE LOGON
@@ -115,12 +106,7 @@ echo "[I] Removing the list of users from the login screen"
 defaults write /Library/Preferences/com.apple.loginwindow SHOWFULLNAME -int 1
 sleep 2
 
-#THIS SECTION REMOVES THE ADMIN ACCOUNT FROM THE FILEVAULT LOGIN SCREEN
-echo "[I] Removing the local administrator account from the FileVault login screen"
-fdesetup remove -user administrator
-sleep 2
-
-#THIS SECTION DISABLES SIRI - SOZ SIRI
+#THIS SECTION DISABLES SIRI - SOZ NOT SOZ
 echo "[I] Disabling Siri"
 defaults write ~/Library/Preferences/com.apple.assistant.support.plist "Assistant Enabled" -int 0; killall -TERM Siri; killall -TERM cfpre$
 sleep 2
@@ -139,8 +125,8 @@ echo "[I] Preventing signed downloads from recieving incoming connections"
 /usr/libexec/ApplicationFirewall/socketfilterfw --setallowsignedapp off
 sleep 2
 
-#THIS SECTION ENABLES PFSENSE AND CONFIGURES SOME ITEMS
-echo "[I] Enabling pfsense and configuring secure options"
+#THIS SECTION ENABLES PACKET FILTER (PF)
+echo "[I] Enabling packet filter (pf)"
 pfctl -e 2> /dev/null; cp /System/Library/LaunchDaemons/com.apple.pfctl.plist /Library/LaunchDaemons/sam.pfctl.plist; /usr/libexec/PlistBuddy -c "Add :ProgramArguments:1 string -e" /Library/LaunchDaemons/sam.pfctl.plist; /usr/libexec/PlistBuddy -c "Set:Label sam.pfctl" /Library/LaunchDaemons/sam.pfctl.plist; launchctl enable system/sam.pfctl; launchctl bootstrap system /Library/LaunchDaemons/sam.pfctl.plist; echo 'anchor "sam_pf_anchors"'>>/etc/pf.conf; echo 'load anchor "sam_pf_anchors" from "/etc/pf.anchors/sam_pf_anchors"'>>/etc/pf.conf
 sleep 2
 
