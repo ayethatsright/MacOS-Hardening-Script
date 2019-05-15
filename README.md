@@ -16,7 +16,6 @@ Copy it to the Mac, open a terminal, go to the directory where the file is store
 Whilst the script is running you will be asked to provide the following information:
 * A hostname for the machine
 * A firmware (BIOS) password
-* The username of the local user account
 
 ## Hardening Controls
 
