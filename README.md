@@ -1,5 +1,5 @@
 # MacOS-Hardening-Script
-A simple bash script to automated the majority of NIST hardening requirements for MacOS
+A simple bash script to automated the majority of NIST hardening requirements for standalone MacOS
 
 I've made this script available to save others time.  It's based on the DRAFT NIST Special Publication 800-179 "Guide to securing macOS 10.12"
 
