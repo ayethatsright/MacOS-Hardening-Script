@@ -1,5 +1,8 @@
 #! /bin/bash
 
+echo "[WARNING] THIS SCRIPT IS STILL UNDER DEV AND HASNT BEEN TESTED AT ALL YET"
+echo "[WARNING] USE THE SCRIPT FROM THE MASTER BRANCH UNLESS YOU HAVE THE TIME TO TROUBLESHOOT THIS"
+
 # MacOs 10.12 Hardening Script which will apply all the 'DRAFT NIST 800-179r1 macOS 10.12 Security
 # Baseline' requirements for STANDALONE machines.
 
@@ -388,57 +391,220 @@ sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Do not allow downloaded signed software to receive incoming connections
+
+echo "[I] Preventing downloaded signed software from receiving incoming connections"
+/usr/libexec/ApplicationFirewall/socketfilterfw --setallowsignedapp off
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Allow builtin signed software to recieve incoming connections
+
+echo "[I] Allowing inbuilt signed software to receive incoming connections"
+/usr/libexec/ApplicationFirewall/socketfilterfw --setallowsigned on
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Set firewall logging to the 'detail' level
+
+echo "[I] Setting firewall logging to the 'detail' level"
+'/usr/libexec/ApplicationFirewall/socketfilterfw --setloggingopt detail
+sleep1
 
 ##################################################################################################
 
-##################################################################################################
+# Enables the pf firewall
+
+echo "[I] Enabling the pf firewall"
+pfctl -e 2> /dev/null; cp /System/Library/LaunchDaemons/com.apple.pfctl.plist /Library/LaunchDaemons/sam.pfctl.plist; /usr/libexec/PlistBuddy -c "Add :ProgramArguments:1 string -e" /Library/LaunchDaemons/sam.pfctl.plist; /usr/libexec/PlistBuddy -c "Set :Label sam.pfctl" /Library/LaunchDaemons/sam.pfctl.plist; launchctl enable system/sam.pfctl; launchctl bootstrap system /Library/LaunchDaemons/sam.pfctl.plist; echo 'anchor "sam_pf_anchors"' >> /etc/pf.conf; echo
+'load anchor "sam_pf_anchors" from "/etc/pf.anchors/sam_pf_anchors"' >> /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block incoming apple file service packets
+
+echo "[I] Configuring the pf firewall to block incoming Apple file service packets"
+echo "#apple file service pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port { 548 }" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block SSDP packets
+
+echo "[I] Configuring the pf firewall to block SSDP packets"
+echo "#bonjour pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto udp to any port 1900" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block finger packets
+
+echo "[I] Configuring the pf firewall to block finger packets"
+echo "#finger pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto tcp to any port 79" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block incoming ftp packets
+
+echo "[I] Configuring the pf firewall to block incoming FTP packets"
+echo "#FTP pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto { tcp udp } to any port { 20 21 }" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block incoming HTTP packets
+
+echo "[I] Configuring the pf firewall to block incoming HTTP packets"
+echo "#http pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto { tcp udp } to any port 80" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block incoming ICMP packets
+
+echo "[I] Configuring the pf firewall to block incoming ICMP packets"
+echo "#icmp pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto icmp" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block incoming IMAP packets
+
+echo "[I] Configuring the pf firewall to block incoming IMAP packets"
+echo "#imap pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port 143" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block incoming IMAPS packets
+
+echo "[I] Configuring the pf firewall to block incoming IMAPS packets"
+echo "#imaps pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port 993" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Configures pf firewall to block iTunes sharing packets
+
+echo "[I] Configuring the pf firewall to block iTunes sharing packets"
+echo "#iTunes sharing pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto tcp to any port 3689" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
 
 ##################################################################################################
+
+# Configures pf firewall to block mDNSResponder packets
+
+echo "[I] Configuring the pf firewall to block mDNSResponder packets"
+echo "#mDNSResponder pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto udp to any port 5353" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block nfs packets
+
+echo "[I] Configuring the pf firewall to block nfs packets"
+echo "#nfs pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto tcp to any port 2049" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block optical drive sharing packets
+
+echo "[I] Configuring the pf firewall to block optical drive sharing packets"
+echo "#optical drive sharing pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto tcp to any port 49152" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming pop3 packets
+
+echo "[I] Configuring the pf firewall to block incoming pop3 packets"
+echo "#pop3 pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port 110" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming printer sharing packets
+
+echo "[I] Configuring the pf firewall to block incoming printer sharing packets"
+echo "#printer sharing pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port 631" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming remote apple events packets
+
+echo "[I] Configuring the pf firewall to block incoming remote Apple events packets"
+echo "#remote apple events pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port 3031" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming screen sharing packets
+
+echo "[I] Configuring the pf firewall to block incoming screen sharing packets"
+echo "#screen sharing pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port 5900" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block smb packets
+
+echo "[I] Configuring the pf firewall to block smb packets"
+echo "#smb pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto tcp to any port { 139 445 }" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto udp to any port { 137 138 }" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming smtp packets
+
+echo "[I] Configuring the pf firewall to block incoming smtp packets"
+echo "#smtp pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto tcp to any port 25" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming ssh packets
+
+echo "[I] Configuring the pf firewall to block incoming ssh packets"
+echo "#SSH pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto { tcp udp } to any port 22" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming telnet packets
+
+echo "[I] Configuring the pf firewall to block incoming telnet packets"
+echo "#telnet pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block in proto { tcp udp } to any port 23" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block incoming tftp packets
+
+echo "[I] Configuring the pf firewall to block incoming tftp packets
+echo "#tftp pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto { tcp udp } to any port 69" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Configures pf firewall to block uucp packets
+
+echo "[I] Configuring the pf firewall to block uucp packets"
+echo "#uucp pf firewall rule" >> "/etc/pf.anchors/sam_pf_anchors"; echo "block proto tcp to any port 540" >> "/etc/pf.anchors/sam_pf_anchors"; pfctl -f /etc/pf.conf
+sleep 1
+
+##################################################################################################
+
+# Enables the application firewall
+
+echo "[I] Enabling the application firewall"
+/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+sleep 1
 
 ##################################################################################################
 
