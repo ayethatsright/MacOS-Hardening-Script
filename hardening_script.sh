@@ -1,5 +1,7 @@
 #! /bin/bash
 
+# The script now has all the NIST settings in but hasn't been tested
+
 echo "[WARNING] THIS SCRIPT IS STILL UNDER DEV AND HASNT BEEN TESTED AT ALL YET"
 echo "[WARNING] USE THE SCRIPT FROM THE MASTER BRANCH UNLESS YOU HAVE THE TIME TO TROUBLESHOOT THIS"
 
