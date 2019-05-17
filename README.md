@@ -17,6 +17,14 @@ Whilst the script is running you will be asked to provide the following informat
 * A hostname for the machine
 * A firmware (BIOS) password
 
+**Hardening Check:**
+
+To audit the state of the hardening of a machine, you can run the 'hardening_check.sh' script on the machine.  To run the script:
+
+Copy it to the Mac, open a terminal, go to the directory where the file is stored and run:
+
+`sudo bash hardening_check.sh`
+
 ## Hardening Controls
 
 The script currently applies the following hardening/applies the following settings (I will link these back to the specific NIST requirement in the near future):
