@@ -608,67 +608,233 @@ sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Prevents any action from occurring when inserting a blank cd
+
+echo "[I] Preventing any action from occuring when inserting a blank cd"
+defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.cd.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Prevents any action from occurring when a blank DVD is inserted
+
+echo "[I] Preventing any action when inserting a blank dvd"
+defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.dvd.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Prevents any action from occuring when inserting a music cd
+
+echo "[I] Preventing any action when inserting a music cd"
+defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.music.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Prevents any action from occurring when inserting a picture cd
+
+echo "[I] Preventing any action when inserting a picture cd"
+defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.picture.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Prevents any action from occurring when inserting a video DVD
+
+echo "[I] Preventing any action when inserting a video DVD"
+defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.dvd.video.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Setting the ComputerName, HostName, LocalHostName and NetBIOSName
+
+echo "[I] You need to provide a name for this device which can be set as the hostname"
+read -p "[!] Enter a name for this device: " DEVNAME
+echo "[I] Setting the ComputerName, HostName and NetBIOSName for this device"
+scutil --set ComputerName $DEVNAME
+scutil --set HostName $DEVNAME
+scutil --set LocalHostName $DEVNAME
+defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server.plist NetBIOSName $DEVNAME
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Disables the file sharing daemons
+
+echo "[I] Disabling the file sharing daemons"
+launchctl disable system/com.apple.smbd; launchctl bootout system/com.apple.smbd; launchctl disable system/com.apple.AppleFileServer; launchctl bootout system/com.apple.AppleFileServer
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Disables the nfs server daemon
+
+echo "[I] Disabling the nfs server daemon"
+launchctl disable system/com.apple.nfsd; launchctl bootout system/com.apple.nfsd; launchctl disable system/com.apple.lockd; launchctl bootout system/com.apple.lockd; launchctl disable system/com.apple.statd.notify; launchctl bootout system/com.apple.statd.notify
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Restricts the use of the remote apple events service to the specified users (no users)
+
+echo "[I] Restricting the use of the remote Apple events service"
+defaults write /private/var/db/dslocal/nodes/Default/groups/com.apple.access_remote_ae.plist users -array ""; defaults delete /private/var/db/dslocal/nodes/Default/groups/com.apple.access_remote_ae.plist groupmembers; defaults delete /private/var/db/dslocal/nodes/Default/groups/com.apple.access_remote_ae.plist nestedgroups; killall -TERM cfprefsd
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Restricts use of the remote management service to the specified users (no users)
+
+echo "[I] Restricting use of the remote management service
+/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -quiet -configure -allowAccessFor -specifiedUsers -access -off
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Limits the screen sharing service to the specified users (no users)
+
+echo "[I] Restricting the use of the screen sharing service"
+defaults write /private/var/db/dslocal/nodes/Default/groups/com.apple.access_screensharing.plist users -array ""; defaults delete /private/var/db/dslocal/nodes/Default/groups/com.apple.access_screensharing.plist groupmembers; defaults delete /private/var/db/dslocal/nodes/Default/groups/com.apple.access_screensharing.plist nestedgroups; killall -HUP cfprefsd
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Prevents the computer from idling into sleep
+
+echo "[I] Preventing the computer from idling into sleep"
+pmset -c sleep 0
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+#Prevents the computer from waking for network access
+
+echo "[I] Prevents the computer from waking for network access"
+pmset -a womp 0
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Determines the length of idle time before the display is put to sleep
+
+echo "[I] Setting the idle time to 20 minutes before the display is put to sleep"
+pmset -a displaysleep 20
+sleep 1
 
 ##################################################################################################
 
-##################################################################################################
+# Disallows the use of challenge/response authentication mechanisms
+
+echo "[I] Disallowing challenge/response authentication mechanisms"
+sed -i.bak 's/.*ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sleep 1
 
 ##################################################################################################
 
+# Disables the public key authentication mechanisms for SSH
+
+echo "[I] Disabling public key authentication for SSH"
+sed -i.bak 's/.*PubkeyAuthentication.*/PubkeyAuthentication no/' /etc/ssh/sshd_config
+sleep 1
+
 ##################################################################################################
+
+# Prevent root login via SSH
+
+echo "[I] Preventing root login via SSH"
+sed -i.bak 's/.*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sleep 1
+
+##################################################################################################
+
+# Sets the number of client alive messages that can be sent without sshd receiving a resposne before the server terminates the connection
+
+echo "Ensuring that the ssh daemon disconnects if a client alive response is not recieved"
+sed -i.bak 's/.*ClientAliveCountMax.*/ClientAliveCountMax 0/' /etc/ssh/sshd_config
+sleep 1
+
+##################################################################################################
+
+# Determines how long a remote user has to authenticate after connecting to a system using ssh
+
+echo "[I] Setting the timeout period for how long a remote user has to authenticate using SSH before being disconnected"
+sed -i.bak 's/.*LoginGraceTime.*/LoginGraceTime 30/' /etc/ssh/sshd_config
+echo "[I] timeout period set to 30 seconds"
+sleep 1
+
+##################################################################################################
+
+# Sets a limit of 4 on the number of authentication attempts before disconnecting the SSH client
+
+echo "[I] Setting the authentication attempts for SSH to 4 before the client is disconnected"
+sed -i.bak 's/.*maxAuthTries.*/maxAuthTries 4/' /etc/ssh/sshd_config
+sleep 1
+
+##################################################################################################
+
+# Prevents the use on non-FIPS 140-2 compliant SSH ciphers
+
+echo "[I] Preventing the use of non-FIPS 140-2 compliant SSH ciphers"
+sed -i.bk 's/^Ciphers.*$//' /etc/sshd_config; echo "Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,aes192-cbc,aes256-cbc,3des-cbc" >> /etc/sshd_config
+sleep 1
+
+##################################################################################################
+
+# Prevents the use of non-FIPS 140-2 compliant Message Authentication Codes (MACs)
+
+echo "[I] Preventing the use of non-FIPS 140-2 compliant Message Authentication Codes (MACs)"
+sed -i.bk 's/^MACs.*$//' /etc/sshd_config; echo "MACs hmac-sha2-256,hmac-sha2-512,hmac-sha1" >> /etc/sshd_config
+sleep 1
+
+##################################################################################################
+
+# Restricts SSH connections to use only the specified user accounts
+
+echo "[I] Restricting SSH connections"
+sed -i.bak 's/^DenyUsers.*$//' /etc/ssh/sshd_config; echo "DenyUsers *" >> /etc/ssh/sshd_config
+sleep 1
+
+##################################################################################################
+
+# Sets a client liveness query of 900 seconds for an SSH session
+
+echo "[I] Setting the liveness query for SSH to 900 seconds"
+sed -i.bak 's/.*ClientAliveInterval.*/ClientAliveInterval 900/' /etc/ssh/sshd_config
+sleep 1
+
+##################################################################################################
+
+# Determines if Bluetooth devices are allwed to wake the computer
+
+echo "[I] Preventing Bluetooth devices from waking the computer"
+defaults write ~/Library/Preferences/ByHost/com.apple.Bluetooth.$UUID.plist RemoteWakeEnabled -bool false; killall -HUP UserEventAgent; killall -HUP cfprefsd
+sleep 1
+
+##################################################################################################
+
+# Disables the infrared receiver
+
+echo "[I] Disabling the Infrared receiver"
+defaults write /Library/Preferences/com.apple.driver.AppleIRController.plist DeviceEnabled -bool false
+sleep 1
+
+##################################################################################################
+
+# Shows the Bluetooth status in the menu bar
+
+echo "[I] Configuring the menu bar to show the Bluetooth status"
+defaults write ~/Library/Preferences/com.apple.systemuiserver.plist menuExtras -array-add "/System/Library/CoreServices/Menu\ Extras/Bluetooth.menu"; killall -HUP SystemUIServer; killall -HUP cfprefsd
+sleep 1
+
+##################################################################################################
+
+# Downloads and installs the latest Apple updates
+
+echo "[I] Downloading and installing the latest Apple updates"
+softwareupdate -ia
+sleep 1
 
 ##################################################################################################
 
