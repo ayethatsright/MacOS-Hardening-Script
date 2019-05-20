@@ -2,26 +2,43 @@
 
 # This script will check the status of the hardening level of the machine (against the hardening applied by the 'hardening_script.sh'
 
+# May need to add an extra echo command if the command isn't very verbose and doesn't indicate what the value is related to when writing out ./results.txt
+
+# Easter Egg
+
+date=$(date +%d-%m)
+alex="18-01"
+
+if [ "$date" == "alex" ]; then
+	echo "[i] IT'S INTERNATIONAL HUG ALEX TAYLOR DAY. DON'T WORRY, YOU WONT CATCH DENGUE FEVER (WE HOPE)"
+	exit 1
+fi
+
 ######################################################################################################################################
 
-#THIS SECTIONS CONFIRMS THAT THE SCRIPT HAS BEEN RUN WITH SUDO
+# THIS SECTIONS CONFIRMS THAT THE SCRIPT HAS BEEN RUN WITH SUDO
+
 if [[ $UID -ne 0 ]]; then
 	echo "Need to run this script as root (with sudo)"
 	exit 1
 fi
 
+echo "[i] Beginning hardening checks now"
 
-echo "[I] Beginning hardening checks now"
+echo "[i] This script will save the results to ./results.txt"
 
-echo "[I] This script will save the results to ./results.txt"
+sleep 1
 
 ######################################################################################################################################
 
 # Getting the hostname and setting it as a variable
 
 echo "[I] Getting the machines hostname:"
-set DEVNAME=scutil --get HostName > ./results.txt
-echo "hostname: " $DEVNAME
+
+set DEVNAME=scutil --get HostName
+
+echo "[i] The machine's hostname is: " DEVNAME >> ./results.txt
+echo "[i] The machine's hostname is: " $DEVNAME
 
 sleep 1
 
@@ -29,13 +46,16 @@ sleep 1
 
 # Confirming if the iCloud login prompt is turned off
 
-echo "[I] Confirming that iCloud login prompt is turned off:"
+echo "[i] Confirming that iCloud login prompt is turned off:"
 
-if [ "defaults read /System/Library/User\ Template/English.lproj/Library/Preferences/com.apple.SetupAssistant DidSeeCloudSetup" = 'true' ]; then
+icloudoff=$(defaults read /System/Library/User\ Template/English.lproj/Library/Preferences/com.apple.SetupAssistant DidSeeCloudSetup)
+icloudoffcorrect="true"
+
+if [ "$icloudoff" == "$icloudoffcorrect" ]; then
         echo "[YES] iCloud login is turned off"
 else 
 	echo "[WARNING] iCloud login is NOT turned off"
-        exit 1;
+	exit 1;
 fi
 
 defaults read /System/Library/User\ Template/Enlish.lproj/Library/Preferences/com.apple.SetupAssistant DidSeeCloudSetup >> ./results.txt
@@ -44,14 +64,17 @@ sleep 1
 
 ######################################################################################################################################
 
-# THIS SECTION CHECKS THAT THE INFRARED RECIEVER IS DISABLED
+# THIS SECTION CHECKS THAT THE INFRARED RECEIVER IS DISABLED
 
-echo "[I] Checking infrared receiver is disabled"
+echo "[i] Checking infrared receiver is disabled"
 
-if [ "defaults read /Library/Preferences/com.apple.driver.AppleIRController.plist DeviceEnabled" = 'false' ]; then
-        echo "[YES] Infrared Reciever is disabled"
+infraredoff=$(defaults read /Library/Preferences/com.apple.driver.AppleIRController.plist DeviceEnabled)
+infraredoffcorrect="false"
+
+if [ "$infraredoff" == "$infraredoffcorrect" ]; then
+	echo "[YES] Infrared Receiver is disabled"
 else 
-	echo "[WARNING] Infrared Reciever is NOT disabled"
+	echo "[WARNING] Infrared Receiver is NOT disabled"
         exit 1;
 fi
 
@@ -61,11 +84,14 @@ sleep 1
 
 ######################################################################################################################################
 
-# THIS SECTION DISABLED THE BLUETOOTH
+# THIS SECTION CHECKS THAT BLUETOOTH IS DISABLED
 
-echo "[I] Checking BlueTooth is disabled"
+echo "[i] Checking BlueTooth is disabled"
 
-if [ "defaults read /Library/Preferences/com.apple.Bluetooth.plist  ControllerPowerState" = '0' ]; then
+bluetooth=$(defaults read /Library/Preferences/com.apple.Bluetooth.plist  ControllerPowerState)
+bluetoothcorrect="0"
+
+if [ "$bluetooth" == "$bluetoothcorrect" ]; then
         echo "[YES] Bluetooth is disabled"
 else 
 	echo "[WARNING] Bluetooth is NOT disabled"
@@ -80,9 +106,12 @@ sleep 1
 
 # THIS SECTION CHECKS THAT AUTOMATIC UPDATES ARE ENABLED
 
-echo "[I] Checking that automatic updates are enabled"
+echo "[i] Checking that automatic updates are enabled"
 
-if [ "defaults read /Library/Preferences/com.apple.SoftwareUpdate.plist AutomaticCheckEnabled" = 'true' ]; then
+updates=$(defaults read /Library/Preferences/com.apple.SoftwareUpdate.plist AutomaticCheckEnabled)
+updatescorrect="true"
+
+if [ "$updates" == "$updatescorrect" ]; then
         echo "[YES] Automatic updates are enabled"
 else 
 	echo "[WARNING] Automatic updates are NOT enabled"
@@ -97,9 +126,12 @@ sleep 1
 
 # THIS SECTION CHECKS THAT PASSWORD HINTS ARE TURNED OFF
 
-echo "[I] Checking that password hints are turned off"
+echo "[i] Checking that password hints are turned off"
 
-if [ "defaults write com.apple.loginwindow RetriesUntilHint" = '0' ]; then
+hints=$(defaults write com.apple.loginwindow RetriesUntilHint)
+hintscorrect="0"
+
+if [ "$hints" == "$hintscorrect" ]; then
         echo "[YES] Password hints are disabled"
 else 
 	echo "[WARNING] Password hints are NOT disabled"
@@ -116,20 +148,27 @@ sleep 1
 
 echo "[I] Confirming that the password-protected screen lock is enabled and set at 5 minutes"
 
-if [ "systemsetup -getdisplaysleep" = 'Display Sleep: after 5 minutes' ]; then
-        echo "[YES] Screen lock timeout is set at 5 minutes"
+disname=$(system setup -getdisplaysleep)
+disnamecorrect="Display Sleep: after 5 minutes"
+
+if [ "$disname" == "$disnamecorrect" ]; then
+	echo "[YES] The screen lock timeout is set at 5 minutes"
 else 
-	echo "[WARNING] Screen lock timeout is NOT set at 5 minutes"
-        exit 1;
+	echo "[WARNING] The screen lock timeout is NOT set at 5 minutes"
+	systemsetup -getdisplaysleep
+	exit 1;
 fi
 
 systemsetup -getdisplaysleep >> ./results.txt
 
-if [ "defaults read com.apple.screensaver askForPassword" = '1' ]; then
-        echo "[YES] The screenlock asks for the user's password after locking"
-else 
-	echo "[WARNING] The screen lock does NOT ask for a password after locking"
-        exit 1;
+askforpassword=$(defaults read com.apple.screensaver askForPassword)
+askforpasswordcorrect="1"
+
+if [ "$askforpassword" == "askforpasswordcorrect" ]; then
+	echo "[YES] The screenlock asks for the user's password after locking"
+else
+	echo "[WARNING] The screenlock does NOT ask for the user's password after locking"
+	exit 1;
 fi
 
 defaults read com.apple.screensaver askForPassword >> ./results.txt
@@ -138,8 +177,15 @@ sleep 1
 
 ######################################################################################################################################
 
-#THIS SECTION SETS THE FIREWALL
-#echo "[I] Enabling Firewall"
+# THIS SECTION CONFIRMS THE FIREWALL IS TURNED ON
+
+echo "[i] Confirming the Firewall is enabled"
+
+firewall=$(/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate)
+firewallcorrect="
+
+
+
 #/usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode on
 #/usr/libexec/ApplicationFirewall/socketfilterfw --setallowsigned on
 #/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
