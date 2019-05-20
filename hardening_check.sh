@@ -178,27 +178,59 @@ sleep 1
 ######################################################################################################################################
 
 # THIS SECTION CONFIRMS THE FIREWALL IS TURNED ON
+# I need to find out what the output from each command is and then add that to the $_x_correct variables otherwise this probably wont work
 
 echo "[i] Confirming the Firewall is enabled"
 
-firewall=$(/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate)
-firewallcorrect="
+firewallon=$(/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate)
+firewalloncorrect="on" # WILL NEED CHANGING ONCE I KNOW WHAT THE OUTPUT FROM THE SOCKETFILTER COMMAND IS
 
+if [ "$firewallon" == "firewalloncorrect" ]; then
+	echo "[YES] The firewall is enabled"
+else
+	echo "[WARNING] The firewall is NOT enabled"
+	exit 1;
+fi
 
+/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate >> ./results.txt
 
-#/usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode on
-#/usr/libexec/ApplicationFirewall/socketfilterfw --setallowsigned on
-#/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
-#sleep 1
+firewalllog=$(/usr/libexec/ApplicationFirewall/socketfilterfw --getloggingmode)
+firewalllogcorrect="on" # WILL NEED CHANGING ONCE I KNOW WHAT THE OUTPUT FROM THE SOCKETFILTER COMMAND IS
+
+if [ "$firewalllog" == "firewalllogcorrect" ]; then
+	echo "[YES] Firewall logging is enabled"
+else
+	echo "[WARNING] Firewall logging is NOT enabled"
+	exit 1;
+fi
+
+/usr/libexec/ApplicationFirewall/socketfilterfw --getloggingmode >> ./results.txt
+
+sleep 1
 ######################################################################################################################################
 
-#THIS SECTION SETS THE FIRMWARE PASSWORD
-#echo "[I] Setting the firmware password"
-#firmwarepasswd -setpasswd
-#sleep 1
+# THIS SECTION CONFIRMS THE FIRMWARE PASSWORD IS SET
+
+echo "[I] Confirming that a firmware password is set"
+
+firmware=$(firmwarepasswd -check)
+firmwarecorrect="yes" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$firmware" == "$firmwarecorrect" ]; then
+	echo "[YES] The firmware password is set"
+else
+	echo "[WARNING] The firmware password has NOT been set"
+	exit 1;
+fi
+
+firmwarepasswd -check >> ./results.txt
+
+sleep 1
+
 ######################################################################################################################################
 
 #THIS SECTION CONFIRMS IF THE SYSTEM INTEGRITY PROTECTION IS ENABLED
+
 #csrutil status
 #sleep 2
 ######################################################################################################################################
@@ -422,20 +454,12 @@ firewallcorrect="
 #sleep 2
 ######################################################################################################################################
 
-
-#THIS SECTION TURNS THE PF FIREWALL ON
-#echo "[I] Turning on the PF firewall"
-#/usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
-#sleep 2
-######################################################################################################################################
-
 #THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A BLANK CD
 #echo "[I] Preventing any actions when a blank CD is inserted"
 #defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.cd.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
 #sleep 2
 
 ######################################################################################################################################
-
 
 #THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A BLANK DVD
 #echo "[I] Preventing any actions when a blank DVD is inserted"
@@ -509,9 +533,8 @@ firewallcorrect="
 #sleep 2
 ######################################################################################################################################
 
-#THIS SECTION REBOOTS THE MACHINE SO THE SETTINGS CAN TAKE EFFECT - IT ADDS A KEYPRESS AS A PAUSE BEFORE CONTINUING WITH THE REBOOT
-#read -r -p "[I] The machine will now reboot to enable the hardening to take effect. Press ENTER to continue..."
+currentlocation=$(pwd -P)
 
-#sudo reboot
+echo "[i] The script has now completed. The results are contained in " $pwd "/.results.txt"
 
-#done
+done
