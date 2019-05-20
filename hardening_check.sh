@@ -11,14 +11,16 @@ if [[ $UID -ne 0 ]]; then
 fi
 
 
-echo "[I] Beginning hardening script now"
+echo "[I] Beginning hardening checks now"
+
+echo "[I] This script will save the results to ./results.txt"
 
 ######################################################################################################################################
 
 # Getting the hostname and setting it as a variable
 
 echo "[I] Getting the machines hostname:"
-set DEVNAME=scutil --get HostName 
+set DEVNAME=scutil --get HostName > ./results.txt
 echo "hostname: " $DEVNAME
 sleep 1
 
@@ -35,30 +37,61 @@ else
         exit 1;
 fi
 
+defaults read /System/Library/User\ Template/Enlish.lproj/Library/Preferences/com.apple.SetupAssistant DidSeeCloudSetup >> ./results.txt
+
 sleep 1
 
 ######################################################################################################################################
 
-#THIS SECTION DISABLES THE INFRARED RECIEVER
-#echo "[I] Disabling infrared receiver"
-#defaults write com.apple.driver.AppleIRController DeviceEnabled -bool FALSE
-#sleep 1
+# THIS SECTION CHECKS THAT THE INFRARED RECIEVER IS DISABLED
+
+echo "[I] Checking infrared receiver is disabled"
+
+if [ "defaults read /Library/Preferences/com.apple.driver.AppleIRController.plist DeviceEnabled" = 'false' ]; then
+        echo "[YES] Infrared Reciever is disabled"
+else 
+	echo "[WARNING] Infrared Reciever is NOT disabled"
+        exit 1;
+fi
+
+defaults read /Library/Preferences/com.apple.driver.AppleIRController.plist DeviceEnabled >> ./results.txt
+
+sleep 1
+
 ######################################################################################################################################
 
-#THIS SECTION DISABLED THE BLUETOOTH
-#echo "[I] Disabling BlueTooth"
-#defaults write /Library/Preferences/com.apple.Bluetooth ControllerPowerState -int -0
-#sleep 1
+# THIS SECTION DISABLED THE BLUETOOTH
+
+echo "[I] Checking BlueTooth is disabled"
+
+if [ "defaults read /Library/Preferences/com.apple.Bluetooth.plist  ControllerPowerState" = '0' ]; then
+        echo "[YES] Bluetooth is disabled"
+else 
+	echo "[WARNING] Bluetooth is NOT disabled"
+        exit 1;
+fi
+
+defaults read /Library/Preferences/com.apple.Bluetooth.plist  ControllerPowerState >> ./results.txt
+
+sleep 1
+
 ######################################################################################################################################
 
-#THIS SECTION ENABLED AUTOMATIC UPDATES
-#echo "[I] Enabling Scheduled updates"
-#softwareupdate --schedule on
-#defaults write /Library/Preferences/com.apple.SoftwareUpdate.plist AutomaticCheckEnabled -bool true
-#defaults write /Library/Preferences/com.apple.SoftwareUpdate.plist AutomaticDownload -bool true
-#defaults write /Library/Preferences/com.apple.commerce.plist AutoUpdateRestartRequired -bool true
-#defaults write /Library/Preferences/com.apple.commerce.plist AutoUpdate -bool true
-#sleep 1
+# THIS SECTION CHECKS THAT AUTOMATIC UPDATES ARE ENABLED
+
+echo "[I] Checking that automatic updates are enabled"
+
+if [ "defaults read /Library/Preferences/com.apple.SoftwareUpdate.plist AutomaticCheckEnabled" = 'true' ]; then
+        echo "[YES] Automatic updates are enabled"
+else 
+	echo "[WARNING] Automatic updates are NOT enabled"
+        exit 1;
+fi
+
+defaults read /Library/Preferences/com.apple.SoftwareUpdate.plist AutomaticCheckEnabled >> ./results.txt
+
+sleep 1
+
 ######################################################################################################################################
 
 #THIS SECTION TURNS OFF PASSWORD HINTS
