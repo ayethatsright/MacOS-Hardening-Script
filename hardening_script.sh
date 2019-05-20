@@ -9,7 +9,23 @@ fi
 
 echo "[I] Beginning hardening script now"
 
-#THIS SECTION SETS THE HOSTNAME
+# THIS SECTION ADDS THE LOCAL USER TO THE SUDOERS FILE
+# NOTE: THIS ISN'T A NIST REQUIREMENT.  I HAVE ADDED IT SIMPLY BECAUSE I NEED IT FOR MY SPECFIC USE CASE
+# I RECOMMEND YOU KEEP IT COMMENTED OUT
+# WARNING WARNING WARNING - I HAVENT TESTED THIS YET
+# I'M ALSO NOT CONVINCED THAT EDITING THE SUDOERS FILE VIA SCRIPT IS A GOOD IDEA.  MIGHT ADD A MANUAL STEP TO THE HARDENING PROCESS INSTEAD
+
+#localuser=$(dscl . list /Users | grep -v “^_”) # hoping this just lists the one user as expected
+
+#echo "[i] Adding $localuser to the sudoers file"
+
+#echo "$localuser	ALL=(ALL) ALL" | sudo tee -a /etc/sudoers > /dev/null
+
+#echo "the sudoers file now contains: " cat /etc/sudoers | grep $localuser
+
+
+# THIS SECTION SETS THE HOSTNAME
+
 read -p "[!] Enter a name for this device: " DEVNAME
 systemsetup -setcomputername "$DEVNAME"
 scutil --set HostName "$DEVNAME"
