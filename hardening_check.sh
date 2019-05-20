@@ -22,6 +22,7 @@ echo "[I] This script will save the results to ./results.txt"
 echo "[I] Getting the machines hostname:"
 set DEVNAME=scutil --get HostName > ./results.txt
 echo "hostname: " $DEVNAME
+
 sleep 1
 
 ######################################################################################################################################
@@ -94,18 +95,47 @@ sleep 1
 
 ######################################################################################################################################
 
-#THIS SECTION TURNS OFF PASSWORD HINTS
-#echo "[I] Disabling password hints on the lock screen"
-#defaults write com.apple.loginwindow RetriesUntilHint -int 0
-#sleep 1
+# THIS SECTION CHECKS THAT PASSWORD HINTS ARE TURNED OFF
+
+echo "[I] Checking that password hints are turned off"
+
+if [ "defaults write com.apple.loginwindow RetriesUntilHint" = '0' ]; then
+        echo "[YES] Password hints are disabled"
+else 
+	echo "[WARNING] Password hints are NOT disabled"
+        exit 1;
+fi
+
+defaults write com.apple.loginwindow RetriesUntilHint >> ./results.txt
+
+sleep 1
+
 ######################################################################################################################################
 
-#THIS SECTION SETS THE SCREENLOCK TIMEOUT
-#echo "[I] Enabling password-protected screen lock after 5 minutes"
-#systemsetup -setdisplaysleep 5
-#defaults write com.apple.screensaver askForPassword -int 1
-#defaults write com.apple.screensaver askForPasswordDelay -int 0
-#sleep 1
+# THIS SECTION CHECKS THE STATUS OF THE SCREENLOCK TIMEOUT AND CONFIRMS IT IS SET AT 5 MINUTES
+
+echo "[I] Confirming that the password-protected screen lock is enabled and set at 5 minutes"
+
+if [ "systemsetup -getdisplaysleep" = 'Display Sleep: after 5 minutes' ]; then
+        echo "[YES] Screen lock timeout is set at 5 minutes"
+else 
+	echo "[WARNING] Screen lock timeout is NOT set at 5 minutes"
+        exit 1;
+fi
+
+systemsetup -getdisplaysleep >> ./results.txt
+
+if [ "defaults read com.apple.screensaver askForPassword" = '1' ]; then
+        echo "[YES] The screenlock asks for the user's password after locking"
+else 
+	echo "[WARNING] The screen lock does NOT ask for a password after locking"
+        exit 1;
+fi
+
+defaults read com.apple.screensaver askForPassword >> ./results.txt
+
+sleep 1
+
 ######################################################################################################################################
 
 #THIS SECTION SETS THE FIREWALL
