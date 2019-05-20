@@ -31,14 +31,23 @@ sleep 1
 
 ######################################################################################################################################
 
+# THIS SECTION GETS A LIST OF USERS FROM THE SUDOERS FILE
+
+echo "[i] The following users are in the sudoers file: "
+
+cat /etc/sudoers | tee -a ./results.txt
+
+sleep 1
+
+######################################################################################################################################
+
 # Getting the hostname and setting it as a variable
 
 echo "[I] Getting the machines hostname:"
 
 set DEVNAME=scutil --get HostName
 
-echo "[i] The machine's hostname is: " DEVNAME >> ./results.txt
-echo "[i] The machine's hostname is: " $DEVNAME
+echo "[i] The machine's hostname is: " $DEVNAME | tee -a ./results.txt
 
 sleep 1
 
@@ -146,7 +155,7 @@ sleep 1
 
 # THIS SECTION CHECKS THE STATUS OF THE SCREENLOCK TIMEOUT AND CONFIRMS IT IS SET AT 5 MINUTES
 
-echo "[I] Confirming that the password-protected screen lock is enabled and set at 5 minutes"
+echo "[i] Confirming that the password-protected screen lock is enabled and set at 5 minutes"
 
 disname=$(system setup -getdisplaysleep)
 disnamecorrect="Display Sleep: after 5 minutes"
@@ -163,6 +172,8 @@ systemsetup -getdisplaysleep >> ./results.txt
 
 askforpassword=$(defaults read com.apple.screensaver askForPassword)
 askforpasswordcorrect="1"
+
+echo "[i] Confirming if the screenlock requires a password after locking"
 
 if [ "$askforpassword" == "askforpasswordcorrect" ]; then
 	echo "[YES] The screenlock asks for the user's password after locking"
@@ -229,22 +240,43 @@ sleep 1
 
 ######################################################################################################################################
 
-#THIS SECTION CONFIRMS IF THE SYSTEM INTEGRITY PROTECTION IS ENABLED
+# THIS SECTION CONFIRMS IF THE SYSTEM INTEGRITY PROTECTION IS ENABLED
 
-#csrutil status
-#sleep 2
+echo "[i] Confirming if System Integrity Protection is enabled"
+
+csrutil status | tee -a ./results.txt
+
+sleep 2
+
 ######################################################################################################################################
 
-#THIS SECTION ENABLES GATEKEEPER
-#spctl --master-enable
-#echo "[I] Gatekeeper is now enabled"
-#sleep 2
+# THIS SECTION CONFIRMS IF GATEKEEPER IS ENABLED
+
+echo "[i] Confirming the status of gatekeeper"
+
+spctl --status | tee -a ./results.txt
+
+sleep 2
+
 ######################################################################################################################################
 
-#THIS SECTION SETS THE SYSTEM AND USERWIDE UMASK TO 022
-#echo "[I] Setting system wide and user umask to 022"
-#launchctl config system umask 022
-#sleep 2
+# THIS SECTION CONFIRMS THAT THE SYSTEM AND USER WIDE UMASK IS SET TO 022
+
+echo "[i] Confirming the system wide and user umask"
+
+umaskvar=$(umask -S)
+umaskval="022"
+
+if [ "$umaskvar" == "$umaskval" ]; then
+	echo "[YES] The umask value is set at 022"
+else
+	echo "[WARNING] The umask value is NOT set at 022"
+	exit 1;
+fi
+
+umask -S | tee -a ./results
+
+sleep 2
 ######################################################################################################################################
 
 #THIS SECTION STOPS THE SENDING OF DIAGNOSTIC INFO TO APPLE
