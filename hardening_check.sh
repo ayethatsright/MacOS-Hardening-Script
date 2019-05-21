@@ -274,295 +274,623 @@ else
 	exit 1;
 fi
 
-umask -S | tee -a ./results
+umask | tee -a ./results
+
+sleep 2
+
+######################################################################################################################################
+
+#THIS SECTION CONFIRMS THAT THE MACHINE IS NOT SENDING DIAGNOSTIC INFO TO APPLE
+
+echo "[I] Confirming that the machine is not sending diagnostic info to Apple"
+
+diag=$(defaults write /Library/Application\ Support/CrashReporter/DiagnosticMessagesHistory.plist AutoSubmit)
+diagconfirm="FALSE" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$diag" == "$diagconfirm" ]; then
+	echo "[YES] The machine isn't sending diagnostic info to Apple"
+else
+	echo "[WARNING] The machine IS sending diagnostic info to Apple"
+	exit 1;
+fi
+
+defaults read /Library/Application\ Support/CrashReporter/DiagnosticMessagesHistory.plist AutoSubmit | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRM THE CONTENTS OF THE LOGON BANNER
+
+echo "[i] The logon banner is set as: "
+cat /Library/Security/PolicyBanner.txt | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT CONSOLE LOGON IS DISABLED
+
+echo "[i] Confirming that console logon is disabled "
+
+console=$(defaults read /Library/Preferences/com.apple.loginwindow.plist DisableConsoleAccess)
+consoleconfirm="TRUE" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$console" == "$consoleconfirm" ]; then
+	echo "[YES] Console logon is currently disabled"
+else
+	echo "[WARNING] Console login is NOT currently disabled"
+	exit 1;
+fi
+
+defaults read /Library/Preferences/com.apple.loginwindow.plist DisableConsoleAccess | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT SUDO IS RESTRICTED TO A SINGLE COMMAND
+
+echo "[i] Confirming that sudo is restricted to a single command"
+
+sudores=$(cat /etc/sudoers | grep -i "Defaults timestamp_timeout=" | grep -o '.$')
+sudoresconfirm="0"
+
+if [ "$sudores" == "$sudoresconfirm" ]; then
+	echo "[YES] sudo is restricted to a single command"
+else
+	echo "[WARNING] sudo is NOT restricted to a single command"
+	exit 1;
+fi
+
+cat /etc/sudoers | grep -i "Defaults timestamp_timeout=" | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT THE LIST OF USERS HAS BEEN REMOVED FROM THE LOGIN SCREEN
+
+echo "[i] Confirming that the list of users has been removed from the login screen"
+
+listu=$(defaults read /Library/Preferences/com.apple.loginwindow SHOWFULLNAME)
+listuconfirm="1" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$listu" == "$listuconfirm" ]; then
+	echo "[YES] The list of users has been removed from the login screen"
+else
+	echo "[WARNING] This list of users is still displayed on the login screen"
+	exit 1;
+fi
+
+defaults read /Library/Preferences/com.apple.loginwindow SHOWFULLNAME | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT SIRI HAS BEEN DISABLED
+
+echo "[i] Confirming SIRI has been disabled"
+
+siri=$(defaults read ~/Library/Preferences/com.apple.assistant.support.plist "Assistant Enabled")
+siriconfirm="0" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$siri" == "$siriconfirm" ]; then
+	echo "[YES] SIRI has been disabled"
+else
+	echo "[WARNING] SIRI has NOT been disabled"
+	exit 1;
+fi
+
+defaults read ~/Library/Preferences/com.apple.assistant.support.plist "Assistant Enabled" | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS IF FILE EXTENTIONS ARE TURNED ON
+
+echo "[i] Confirming that hidden file extentions are turned on"
+
+fileex=$(defaults read ~/Library/Preferences/.GlobalPreferences.plist AppleShowAllExtensions)
+fileexconfirm="TRUE" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$fileex" == "$fileexconfirm" ]; then
+	echo "[YES] Hidden file extensions will be shown"
+else
+	echo "[WARNING] Hidden file extensions are DISABLED"
+	exit 1;
+fi
+
+defaults read ~/Library/Preferences/.GlobalPreferences.plist AppleShowAllExtensions | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+#THIS SECTION CONFIRMS THAT OTHER APPLICATIONS CANNOT INTERCEPT THE TEXT TYPED IN TO THE TERMINAL
+
+echo "[i] Confirming that the secure Terminal keyboard is enabled"
+
+termi=$(defaults read ~/Library/Preferences/com.apple.Terminal.plist SecureKeyboardEntry)
+termiconfirm="1" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$termi" == "$termiconfirm" ]; then
+	echo "[YES] The secure terminal keyboard is enabled"
+else
+	echo "[WARNING] The secure terminal keyboard is NOT enabled"
+	exit 1;
+fi
+
+defaults read ~/Library/Preferences/com.apple.Terminal.plist SecureKeyboardEntry | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT DOWNLOADED SIGNED SOFTWARE CANNOT RECIEVE INCOMING CONNECTIONS
+
+echo "[i] Confirming that signed downloads are prevented from recieving incoming connections"
+
+asigned=$(/usr/libexec/ApplicationFirewall/socketfilterfw --getallowsigned | grep -i "NEED TO KNOW OUTPUT OF THE GETALLOWSIGNED COMMAND AND THEN GREP TO JUST TAKE THE DOWNLOADED SIGNED RESULT AND NOT THE INBUILT SYSTEM SIGNED RESULT")
+asignedconfirm="off"  # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$asigned" == "$asignedconfirm" ]; then
+	echo "[YES] Downloaded signed software cannot recieve incoming connections by default"
+else
+	echo "[WARNING] Downloaded signed software CAN recieve incoming connections by default"
+	exit 1;
+fi
+
+/usr/libexec/ApplicationFirewall/socketfilterfw --getallowsigned | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT PACKET FILTER (PF) IS ENABLED
+
+echo "[i] Confirming that packet filter (pf) is enabled"
+
+pfenab=$(pfctl -s info | egrep -i 'enabled|disabled')
+pfenabconfirm="enabled"
+
+if [ "$pfenab" == "$pfenabconfirm" ]; then
+	echo "[YES] pf is enabled"
+else
+	echo "[WARNING] pf is NOT enabled"
+	exit 1;
+fi
+
+pfctl -s info | egrep -i 'enabled|disabled' | tee -a ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT THE FIREWALL IS CONFIGURED TO BLOCK INCOMING APPLE FILE SERVER
+
+echo "[i] Confirming that all the necessary FW rules are in place"
+
+ftprule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto { tcp udp } to any port { 20 21 }")
+bonjourrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto udp to any port 1900")
+fingerrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto tcp to any port 79")
+httprule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto { tcp udp } to any port 80")
+icmprule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto icmp")
+imaprule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port 143")
+imapsrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port 993")
+itunesrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto tcp to any port 3689")
+mdnsrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto udp to any port 5353")
+nfsrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto tcp to any port 2049")
+opticalrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto tcp to any port 49152")
+pop3rule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port 110")
+pop3srule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port 995")
+printerrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port 631")
+remoterule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in  proto tcp to any port 3031")
+screenrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port 5900")
+smbrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto tcp to any port { 139 445 }; block proto udp to any port {137 138}")
+smtprule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port 25")
+sshrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto { tcp udp} to any port 22")
+telnetrule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto { tcp udp } to any port 23")
+tftprule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto { tcp udp } to any port 69")
+uucprule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block proto tcp to any port 540")
+applerule=$(cat /etc/pf.anchors/sam_pf_anchors | grep -i "block in proto tcp to any port {548}")
+
+ftpruleconfirm="block in proto { tcp udp } to any port { 20 21 }"
+bonjourruleconfirm="block proto udp to any port 1900"
+fingerruleconfirm="block proto tcp to any port 79"
+httpruleconfirm="block in proto { tcp udp } to any port 80"
+icmpruleconfirm="block in proto icmp"
+imapruleconfirm="block in proto tcp to any port 143"
+imapsruleconfirm="block in proto tcp to any port 993"
+itunesruleconfirm="block proto tcp to any port 3689"
+mdnsruleconfirm="block proto udp to any port 5353"
+nfsruleconfirm="block proto tcp to any port 2049"
+opticalruleconfirm="block proto tcp to any port 49152"
+pop3ruleconfirm="block in proto tcp to any port 110"
+pop3sruleconfirm="block in proto tcp to any port 995"
+printerruleconfirm="block in proto tcp to any port 631"
+remoteruleconfirm="block in  proto tcp to any port 3031"
+screenruleconfirm="block in proto tcp to any port 5900"
+smbruleconfirm="block proto tcp to any port { 139 445 }; block proto udp to any port {137 138}"
+smtpruleconfirm="block in proto tcp to any port 25"
+sshruleconfirm="block in proto { tcp udp} to any port 22"
+telnetruleconfirm="block in proto { tcp udp } to any port 23"
+tftpruleconfirm="block proto { tcp udp } to any port 69"
+uucpruleconfirm="block proto tcp to any port 540"
+appleruleconfirm="block in proto tcp to any port {548}"
+
+if [ "$ftprule" == "$ftpruleconfirm" ]; then
+	echo "[YES] FTP rule is enabled"
+else
+	echo "[WARNING] FTP rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$bonjourrule" == "$bonjourruleconfirm" ]; then
+	echo "[YES] Bonjour rule is enabled"
+else
+	echo "[WARNING] Bonjour rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$fingerrule" == "$fingerruleconfirm" ]; then
+	echo "[YES] Finger rule is enabled"
+else
+	echo "[WARNING] Finger rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$httprule" == "$httpruleconfirm" ]; then
+	echo "[YES] HTTP rule is enabled"
+else
+	echo "[WARNING] HTTP rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$icmprule" == "$icmpruleconfirm" ]; then
+	echo "[YES] ICMP rule is enabled"
+else
+	echo "[WARNING] ICMP rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$imaprule" == "$imapruleconfirm" ]; then
+	echo "[YES] IMAP rule is enabled"
+else
+	echo "[WARNING] IMAP rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$imapsrule" == "$imapsruleconfirm" ]; then
+	echo "[YES] IMAPS rule is enabled"
+else
+	echo "[WARNING] IMAPS rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$itunesrule" == "$itunesruleconfirm" ]; then
+	echo "[YES] iTune Sharing rule is enabled"
+else
+	echo "[WARNING] iTune Sharing rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$mdnsrule" == "$mdnsruleconfirm" ]; then
+	echo "[YES] mDNSResolver rule is enabled"
+else
+	echo "[WARNING] mDNSResolver rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$nfsrule" == "$nfsruleconfirm" ]; then
+	echo "[YES] NFS rule is enabled"
+else
+	echo "[WARNING] NFS rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$opticalrule" == "$opticalruleconfirm" ]; then
+	echo "[YES] Optical Sharing rule is enabled"
+else
+	echo "[WARNING] Optical Sharing rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$pop3rule" == "$pop3ruleconfirm" ]; then
+	echo "[YES] POP3 rule is enabled"
+else
+	echo "[WARNING] POP3 rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$pop3srule" == "$pop3sruleconfirm" ]; then
+	echo "[YES] POP3S rule is enabled"
+else
+	echo "[WARNING] POP3S rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$printerrule" == "$printerruleconfirm" ]; then
+	echo "[YES] Printer Sharing rule is enabled"
+else
+	echo "[WARNING] Printer Sharing rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$remoterule" == "$remoteruleconfirm" ]; then
+	echo "[YES] Remote support rule is enabled"
+else
+	echo "[WARNING] Remote support rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$screenrule" == "$screenruleconfirm" ]; then
+	echo "[YES] Screen Sharing rule is enabled"
+else
+	echo "[WARNING] Screen Sharing rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$smbrule" == "$smbruleconfirm" ]; then
+	echo "[YES] SMB rule is enabled"
+else
+	echo "[WARNING] SMB rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$smtprule" == "$smtpruleconfirm" ]; then
+	echo "[YES] SMTP rule is enabled"
+else
+	echo "[WARNING] SMTP rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$sshrule" == "$sshruleconfirm" ]; then
+	echo "[YES] SSH rule is enabled"
+else
+	echo "[WARNING] SSH rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$telnetrule" == "$telnetruleconfirm" ]; then
+	echo "[YES] Telnet rule is enabled"
+else
+	echo "[WARNING] Telnet rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$tftprule" == "$tftpruleconfirm" ]; then
+	echo "[YES] TFTP rule is enabled"
+else
+	echo "[WARNING] TFTP rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$uucprule" == "$uucpruleconfirm" ]; then
+	echo "[YES] UUCP rule is enabled"
+else
+	echo "[WARNING] UUCP rule is NOT enabled"
+	exit 1;
+fi
+
+if [ "$applerule" == "$appleruleconfirm" ]; then
+	echo "[YES] Apple Remote Event rule is enabled"
+else
+	echo "[WARNING] Apple Remote Event rule is NOT enabled"
+	exit 1;
+fi
+
+echo "########################################################################" >> ./results.txt
+echo "The following rules are contained in the firewall ruleset: " >> ./results.txt
+echo "#" >> ./results.txt
+echo "#" >> ./results.txt
+cat /etc/pf.anchors/sam_pf_anchors >> ./results.txt
+echo "#" >> ./results.txt
+echo "#" >> ./results.txt
+echo "########################################################################" >> ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS NO ACTION WILL BE PERFORMED WHEN INSERTING VARIOUS MEDIA
+
+echo "[i] Confirming there is no action when a various media are inserted"
+
+blankcd=$(defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.cd.appeared)
+blankcdconfirm="1" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+blankdvd=$(defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.dvd.appeared)
+blankdvdconfirm="1" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+musiccd=$(defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.music.appeared)
+musiccdconfirm="1" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+picturecd=$(defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.picture.appeared)
+picturecdconfirm="1" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+videodvd=$(defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.dvd.video.appeared)
+videodvdconfirm="1" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$blankcd" == "$blankcdconfirm" ]; then
+	echo "[YES] No action is taken when a blank cd is inserted"
+else
+	echo "[WARNING] Automatic action will be taken when a blank cd is inserted"
+	exit 1;
+fi
+
+if [ "$blankdvd" == "$blankdvdconfirm" ]; then
+	echo "[YES] No action is taken when a blank dvd is inserted"
+else
+	echo "[WARNING] Automatic action will be taken when a blank dvd is inserted"
+	exit 1;
+fi
+
+if [ "$musiccd" == "$musiccdconfirm" ]; then
+	echo "[YES] No action is taken when a music cd is inserted"
+else
+	echo "[WARNING] Automatic action will be taken when a music cd is inserted"
+	exit 1;
+fi
+
+if [ "$picturecd" == "$picturecdconfirm" ]; then
+	echo "[YES] No action is taken when a picture cd is inserted"
+else
+	echo "[WARNING] Automatic action will be taken when a picture cd is inserted"
+	exit 1;
+fi
+
+if [ "$videodvd" == "$videodvdconfirm" ]; then
+	echo "[YES] No action is taken when a video dvd is inserted"
+else
+	echo "[WARNING] Automatic action will be taken when a video dvd is inserted"
+	exit 1;
+fi
+
+defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.cd.appeared >> ./results.txt
+defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.dvd.appeared >> ./results.txt
+defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.music.appeared >> ./results.txt
+defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.picture.appeared >> ./results.txt
+defaults read ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.dvd.video.appeared >> ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT THE FILE SHARING DAEMON IS DISABLED
+
+echo "[i] Confirming that the file sharing daemon is disabled"
+
+fileserver=$(launchctl print system | grep -c smbd; launchctl print system | grep -c AppleFileServer)
+fileserverconfirm="enabled" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$fileserver" == "$fileserverconfirm" ]; then
+	echo "[YES] Filesharing daemon is disabled"
+else
+	echo "[WARNING] Filesharing daemon is NOT disabled"
+	exit 1;
+fi
+
+launchctl print system | grep -c smdb; launchctl print system | grep -c AppleFileServer >> ./results.txt
+
+# might just be able to get away with 'launchctl print system | grep -c smbd; launchctl print system | grep -c AppleFileServer | tee -a ./results.txt' instead of setting the variables and then using the 'if' statement.
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT BONJOUR SERVICE ADVERTISEMENTS ARE PREVENTED FROM BROADCASTING
+
+echo "[i] Confirming that the computer is prevented from broadcasting Bonjour service advertisements"
+
+bonsa=$(defaults read /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements)
+bonsaconfirm="true" # WILL NEED TO UPDATE ONCE I KNOW WHAT THE OUTPUT OF THE COMMAND ACTUALLY IS
+
+if [ "$bonsa" == "$bonsaconfirm" ]; then
+	echo "[YES] This computer is prevented from broadcasting bonjour service advertisements"
+else
+	echo "[WARNING] The computer is broadcasting bonjour service advertisements"
+	exit 1;
+fi
+
+defaults write /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements >> ./results.txt
+
+sleep 2
+
+######################################################################################################################################
+
+# THIS SECTION CONFIRMS THAT THE NFS SERVER DAEMON IS DISABLED
+
+echo "[i] Confirming the NFS server daemon is disabled"
+
+launchctl print system | grep -c nfsd; launchctl print system | grep -c lockd; launchctl print system | grep -c statd.notify | tee -a ./results.txt
+
+# If this doesn't work, will need to run launchctl and set the output as a variable then use the variable in an 'if' statement.
 
 sleep 2
 ######################################################################################################################################
 
-#THIS SECTION STOPS THE SENDING OF DIAGNOSTIC INFO TO APPLE
-#echo "[I] Stopping this machine from sending diagnostic info to Apple"
-#defaults write /Library/Application\ Support/CrashReporter/DiagnosticMessagesHistory.plist AutoSubmit -bool FALSE
-#sleep 2
+# THIS SECTION DISABLES THE PUBLIC KEY AUTHENTICATION MECHANISM
+
+echo "[i] Disabling the public key authentication mechanism for SSH"
+
+pubkey=$(grep -E 'PubkeyAuthentication (yes|no)' /etc/ssh/sshd_config)
+pubkeyconfirm="no"
+
+if [ "$pubkey" == "pubkeyconfirm" ]; then
+	echo "[YES] Public key authentication for SSH is disabled"
+else
+	echo "[WARNING] Public key authentication for SSH is NOT disabled"
+	exit 1;
+fi
+
+grep -E 'PubkeyAuthentication (yes|no)' /etc/ssh/sshd_config | tee -a ./results.txt
+
+sleep 2
 
 ######################################################################################################################################
 
-#THIS SECTION ADDS THE LOGON BANNER
-#echo "[I] Adding the logon banner"
-#printf '%s\n' '[REPLACE THIS WITH THE NAME OF YOUR COMPANY i.e. Gihub Plc]' 'Unauthorised use of this system is an offence under the Computer Misuse Act 1990.' 'Unless authorised by [YOUR COMPANY] do not proceed. You must not abuse your' 'own system access or use the system under another User ID.' > /Library/Security/PolicyBanner.txt
-#sleep 2
-######################################################################################################################################
+# THIS SECTION CONFIRMS THAT ROOT LOGIN VIA SSH IS PREVENTED
 
-#THIS SECTION DISABLES CONSOLE LOGON
-#echo "[I] Disabling console logon from the logon screen"
-#defaults write /Library/Preferences/com.apple.loginwindow.plist DisableConsoleAccess -bool TRUE
-#sleep 2
-######################################################################################################################################
+echo "[i] Confirming that root login via SSH is prevented"
 
-#THIS SECTION RESTRICTS SUDO TO A SINGLE COMMAND
-#echo "[I] Restricting sudo authentication to a single command"
-#sed -i.bk 's/^Defaults[[:blank:]]timestamp_timeout.*$//' /etc/sudoers; echo "Defaults timestamp_timeout=0">>/etc/sudoers; rm /etc/sudoers.bk
-#sleep 2
-######################################################################################################################################
+rootlogin=$(grep -E '^[#]PermitRootLogin' /etc/ssh/sshd_config)
+rootloginconfirm="no"
 
-#THIS SECTION REMOVES THE LIST OF USERS FROM THE LOGIN SCREEN
-#echo "[I] Removing the list of users from the login screen"
-#defaults write /Library/Preferences/com.apple.loginwindow SHOWFULLNAME -int 1
-#sleep 2
-######################################################################################################################################
+if [ "$rootlogin" == "$rootloginconfirm" ]; then
+	echo "[YES] Root login via SSH is prevented"
+else
+	echo "[WARNING] Root login via SSH is NOT being prevented"
+	exit 1;
+fi
 
-#THIS SECTION DISABLES SIRI - SOZ NOT SOZ
-#echo "[I] Disabling Siri"
-#defaults write ~/Library/Preferences/com.apple.assistant.support.plist "Assistant Enabled" -int 0; killall -TERM Siri; killall -TERM cfpre$
-#sleep 2
-######################################################################################################################################
+grep -E '^[#]PermitRootLogin' /etc/ssh/sshd_config | tee -a ./results.txt
 
-#THIS SECTION TURNS ON FILE EXTENTIONS
-#echo "[I] Turning on file extentions which are hidden by default"
-#defaults write ~/Library/Preferences/.GlobalPreferences.plist AppleShowAllExtensions -bool TRUE; killall -HUP Finder; killall -HUP cfprefsd
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION PREVENTS OTHER APPLICATIONS FROM INTERCEPTING TEXT TYPED IN TO TERMINAL
-#echo "[I] Enabling secure Terminal keyboard to prevent other applications from intercepting anything typed in to terminal"
-#defaults write ~/Library/Preferences/com.apple.Terminal.plist SecureKeyboardEntry -int 1
-######################################################################################################################################
-
-#THIS SECTION PREVENTS DOWNLOADED SIGNED SOFTWARE FROM RECIEVING INCOMING CONNECTIONS
-#echo "[I] Preventing signed downloads from recieving incoming connections"
-#/usr/libexec/ApplicationFirewall/socketfilterfw --setallowsignedapp off
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION ENABLES PACKET FILTER (PF)
-#echo "[I] Enabling packet filter (pf)"
-#pfctl -e 2> /dev/null; cp /System/Library/LaunchDaemons/com.apple.pfctl.plist /Library/LaunchDaemons/sam.pfctl.plist; /usr/libexec/PlistBuddy -c "Add :ProgramArguments:1 string -e" /Library/LaunchDaemons/sam.pfctl.plist; /usr/libexec/PlistBuddy -c "Set:Label sam.pfctl" /Library/LaunchDaemons/sam.pfctl.plist; launchctl enable system/sam.pfctl; launchctl bootstrap system /Library/LaunchDaemons/sam.pfctl.plist; echo 'anchor "sam_pf_anchors"'>>/etc/pf.conf; echo 'load anchor "sam_pf_anchors" from "/etc/pf.anchors/sam_pf_anchors"'>>/etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FIREWALL TO BLOCK INCOMING APPLE FILE SERVER
-#echo "[I] Configuring the FW to block incoming Apple file server requests"
-#echo "#apple file service pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port {548}">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FIREWALL TO BLOCK BONJOUR PACKETS
-#echo "[I] Configuring the FW to block Bonjour packets"
-#echo "#bonjour pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto udp to any port 1900">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK FINGER PACKETS - GIGGITY
-#echo "[I] Configuring the FW to block finger packets"
-#echo "#finger pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto tcp to any port 79">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK FTP
-#echo "[I] Configuring the FW to block FTP traffic"
-#echo "#FTP pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto { tcp udp } to any port { 20 21 }">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK HTTP
-#echo "[I] Configuring the FW to block incoming HTTP"
-#echo "#http pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto { tcp udp } to any port 80">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK ICMP
-#echo "[I] Configuring the FW to block icmp packets"
-#echo "#icmp pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto icmp">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK IMAP
-#echo "[I] Configuring the FW to block IMAP packets"
-#echo "#imap pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port 143">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK IMAPS
-#echo "[I] Configuring the FW to block IMAPS packets"
-#echo "#imaps pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port 993">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK iTUNES SHARING PACKETS
-#echo "[I] Configuring the FW to block iTunes sharing packets"
-#echo "#iTunes sharing pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto tcp to any port 3689">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK mDNSResponder packets
-#echo "[I] Configuring the FW to block mDNSResponder packets"
-#echo "#mDNSResponder pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto udp to any port 5353">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK NFS PACKET
-#echo "[I] Configuring the FW to block NFS packets"
-#echo "#nfs pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto tcp to any port 2049">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK OPTICAL DRIVE SHARING PACKETS
-#echo "[I] Configuring the FW to block Optical Drive Sharing packets"
-#echo "#optical drive sharing pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto tcp to any port 49152">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK POP3 PACKETS
-#echo "[I] Configuring the FW to block POP3 packets"
-#echo "#pop3 pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port 110">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK POP3S PACKETS
-#echo "[I] Configuring the FW to block Optical Drive Sharing packets"
-#echo "#pop3s pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port 995">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
+sleep 2
 
 ######################################################################################################################################
 
-#THIS SECTION CONFIGURES THE FW TO BLOCK PRINTER SHARING PACKETS
-#echo "[I] Configuring the FW to block Printer Sharing packets"
-#echo "#printer sharing pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port 631">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
+# THIS SECTION CONFIRMS THE NUMBER OF CLIENT ALIVE MESSAGES
+
+echo "[i] Confirming that the number of client alive messages that can be sent without the sshd recieving a response is set to 0 before it disconnects"
+
+alive=$(grep 'ClientAliveCountMax' /etc/ssh/sshd_config)
+
+if [ "$alive" -ne "0" ]; then
+	echo "[WARNING] The number of client alive messages is greater than 0"
+	echo "[WARNING] The current number of client alive messages that will be send without a response is: " $alive
+else
+	echo "[YES] The number of client alive messages is 0"
+	exit 1;
+fi
+
+grep 'ClientAliveCountMax' /etc/ssh/sshd_config >> ./results.txt
+
+sleep 2
 
 ######################################################################################################################################
 
-#THIS SECTION CONFIGURES THE FW TO BLOCK REMOTE APPLE EVENTS PACKETS
-#echo "[I] Configuring the FW to block Remote Apple Events packets"
-#echo "#remote apple events pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in  proto tcp to any port 3031">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
+# THIS SECTION CONFIRMS THAT THE SSH SERVER WILL LIMIT FAILED LOGON ATTEMPTS TO 4
 
-######################################################################################################################################
+echo "[i] Confirming the SSH server limits the number of failed logon attempts to four"
 
-#THIS SECTION CONFIGURES THE FW TO BLOCK SCREEN SHARING PACKETS
-#echo "[I] Configuring the FW to block Screen Sharing packets"
-#echo "#screen sharing pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port 5900">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
+maxauth=$(grep 'MaxAuthTries' /etc/ssh/sshd_config)
 
-######################################################################################################################################
+if [ "$maxauth" != "4" ]; then
+	if [ "$maxauth" < "4" ]; then
+		echo "[i] The maximum number of tries is less than 4"
+		echo "[i] The maximum number of tries is set at: " $maxauth
+	else
+		echo "[WARNING] The maximum number of tries is MORE THAN 4"
+		echo "[WARNING] The maximum number of tries is set at: " $maxauth
+	fi
+else
+	echo "[YES] The maximum number of tries is set at 4"
+	exit 1;
+fi
 
-#THIS SECTION CONFIGURES THE FW TO BLOCK SMB PACKETS
-#echo "[I] Configuring the FW to block SMB packets"
-#echo "#smb pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto tcp to any port { 139 445 }; block proto udp to any port {137 138}">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
+grep 'MaxAuthTries' /etc/ssh/sshd_config >> ./results.txt
 
+sleep 2
 
-#THIS SECTION CONFIGURES THE FW TO BLOCK SMTP PACKETS
-#echo "[I] Configuring the FW to block smtp packets"
-#echo "#smtp pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto tcp to any port 25">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK SSH PACKETS
-#echo "[I] Configuring the FW to block SSH packets"
-#echo "#ssh pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto { tcp udp} to any port 22">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK TELNET PACKETS
-#echo "[I] Configuring the FW to block telnet"
-#echo "#telnet pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block in proto { tcp udp } to any port 23">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK TFTP PACKETS
-#echo "[I] Configuring the FW to block tftp packets"
-#echo "#tftp pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto { tcp udp } to any port 69">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-
-#THIS SECTION CONFIGURES THE FW TO BLOCK UUCP PACKETS
-#echo "[I] Configuring the FW to block uucp packets"
-#echo "#uucp pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto tcp to any port 540">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A BLANK CD
-#echo "[I] Preventing any actions when a blank CD is inserted"
-#defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.cd.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
-#sleep 2
-
-######################################################################################################################################
-
-#THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A BLANK DVD
-#echo "[I] Preventing any actions when a blank DVD is inserted"
-#defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.dvd.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A MUSIC CD
-#echo "[I] Preventing any actions when a music CD is inserted"
-#defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.music.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A PICTURE CD
-#echo "[I] Preventing any actions when a picture CD is inserted"
-#defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.cd.picture.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A VIDEO DVD
-#echo "[I] Preventing any actions when a DVD containing video is inserted"
-#defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.dvd.video.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION DISABLES THE FILE SHARING DAEMON
-#echo "[I] Disabling the filesharing daemon"
-#launchctl disable system/com.apple.smbd; launchctl bootout system/com.apple.smbd; launchctl disable system/com.apple.AppleFileServer; launchctl bootout system/com.apple.AppleFileServer
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION DISABLES BLUETOOTH
-#echo "[I] Disabling bluetooth"
-#launchctl disable system/com.apple.blued; launchctl bootout system/com.apple.blued
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION PREVENTS THE COMPUTER FROM BROADCASTING BONJOUR SERVICE ADVERTS
-#echo "[I] Preventing the computer from broadcasting Bonjour service advertisements"
-#defaults write /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements -bool true
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION DISABLES NFS SERVER DAEMON
-#echo "[I] Disabling the NFS server daemon"
-#launchctl disable system/com.apple.nfsd; launchctl bootout system/com.apple.nfsd; launchctl disable system/com.apple.lockd; launchctl bootout system/com.apple.lockd; launchctl disable system/com.apple.statd.notify; launchctl bootout system/com.apple.statd.notify
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION DISABLES THE PUBLIC KEY AUTHENTICATION MECHANISM
-#echo "[I] Disabling the public key authentication mechanism for SSH"
-#sed -i.bak 's/.*PubkeyAuthentication.*/PubkeyAuthentication no/' /etc/ssh/sshd_config
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION PREVENTS ROOT LOGIN VIA SSH
-#echo "[I] Preventing root login via SSH"
-#sed -i.bak 's/.*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION SETS THE NUMBER OF CLIENT ALIVE MESSAGES
-#echo "[I] Setting the number of client alive messages that can be sent without the sshd recieving a response to 0 before it disconnects"
-#sed -i.bak 's/.*ClientAliveCountMax.*/ClientAliveCountMax 0/' /etc/ssh/sshd_config
-#sleep 2
-######################################################################################################################################
-
-#THIS SECTION LIMITS THE NUMBER OF AUTHENTICATION ATTEMPTS BEFORE DISCONNECTING THE CLIENT
-#echo "[I] Setting the number of authentication attempts before disconnecting the client to four"
-#sed -i.bak 's/.*maxAuthTries.*/maxAuthTries 4/' /etc/ssh/sshd_config
-#sleep 2
 ######################################################################################################################################
 
 currentlocation=$(pwd -P)
