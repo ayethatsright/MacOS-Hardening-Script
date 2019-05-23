@@ -66,15 +66,6 @@ echo "[I] Setting the firmware password"
 firmwarepasswd -setpasswd
 sleep 1
 
-#THIS SECTION CHOWNS THE LOCAL USERS DIRECTORY
-CONFIRM="n"
-while [ "$CONFIRM" != "y" ] ; do
-	echo "[I] We need to change file owner (CHOWN) of the user's home directory to ensure all files are permissioned correctly.  What is the username of the local user account created previously? "
-	read -p "Local user's username: " LOCALUSERNAME
-	echo "[?] Is the local user's username correct?"
-	echo " Local user's username: $LOCALUSERNAME"
-	read -p "[y/n]: " CONFIRM
-
 #THIS SECTION CONFIRMS IF THE SYSTEM INTEGRITY PROTECTION IS ENABLED
 csrutil status
 sleep 2
@@ -97,7 +88,8 @@ sleep 2
 
 #THIS SECTION ADDS THE LOGON BANNER
 echo "[I] Adding the logon banner"
-printf '%s\n' 'EUI Limited' 'Unauthorised use of this system is an offence under the Computer Misuse Act 1990.' 'Unless authorised by AGL Management do not proceed. You must not abuse your' 'own system access or use the system under another User ID.' > /Library/Security/PolicyBanner.txt
+#printf '%s\n' 'EUI Limited' 'Unauthorised use of this system is an offence under the Computer Misuse Act 1990.' 'Unless authorised by AGL Management do not proceed. You must not abuse your' 'own system access or use the system under another User ID.' > /Library/Security/PolicyBanner.txt
+printf '%s\n' 'Alex loves jazz' '...and cats.' 'add he knowns were [REDACTED] is being held' 'Enjoy the Mac.' > /Library/Security/PolicyBanner.txt
 sleep 2
 
 #THIS SECTION DISABLES CONSOLE LOGON
@@ -154,7 +146,7 @@ echo "[I] Configuring the FW to block Bonjour packets"
 echo "#bonjour pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto udp to any port 1900">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
 sleep 2
 
-#THIS SECTION CONFIGURES THE FW TO BLOCK FINGER PACKETS - GIGGITY
+#THIS SECTION CONFIGURES THE FW TO BLOCK FINGER PACKETS
 echo "[I] Configuring the FW to block finger packets"
 echo "#finger pf firewall rule">>"/etc/pf.anchors/sam_pf_anchors";echo "block proto tcp to any port 79">>"/etc/pf.anchors/sam_pf_anchors";pfctl -f /etc/pf.conf
 sleep 2
@@ -269,7 +261,6 @@ echo "[I] Preventing any actions when a blank CD is inserted"
 defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.cd.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
 sleep 2
 
-
 #THIS SECTION PREVENTS ANY ACTION WHEN INSERTING A BLANK DVD
 echo "[I] Preventing any actions when a blank DVD is inserted"
 defaults write ~/Library/Preferences/com.apple.digihub.plist com.apple.digihub.blank.dvd.appeared -dict action -int 1; killall -HUP SystemUIServer; killall -HUP cfprefsd
@@ -333,6 +324,6 @@ sleep 2
 #THIS SECTION REBOOTS THE MACHINE SO THE SETTINGS CAN TAKE EFFECT - IT ADDS A KEYPRESS AS A PAUSE BEFORE CONTINUING WITH THE REBOOT
 read -r -p "[I] The machine will now reboot to enable the hardening to take effect. Press ENTER to continue..."
 
-#sudo reboot
+sudo reboot
 
 done
